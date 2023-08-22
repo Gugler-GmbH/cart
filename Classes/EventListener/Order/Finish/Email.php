@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Extcode\Cart\EventListener\Order\Finish;
 
 /*
@@ -16,12 +18,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class Email
 {
-    /**
-     * Cart
-     *
-     * @var Cart
-     */
-    protected $cart;
+    protected Cart $cart;
 
     public function __invoke(EventInterface $event): void
     {
@@ -29,46 +26,39 @@ class Email
         $orderItem = $event->getOrderItem();
         $settings = $event->getSettings();
 
-        $paymentCountry = $orderItem->getPayment()->getServiceCountry();
-        $paymentId = $orderItem->getPayment()->getServiceId();
-
-        if ($paymentCountry) {
-            $serviceSettings = $settings['payments'][$paymentCountry]['options'][$paymentId];
-        } else {
-            $serviceSettings = $settings['payments']['options'][$paymentId];
+        if($orderItem->getPayment()) {
+            $paymentCountry = $orderItem->getPayment()->getServiceCountry();
+            $paymentId = $orderItem->getPayment()->getServiceId();
+    
+            if ($paymentCountry) {
+                $serviceSettings = $settings['payments'][$paymentCountry]['options'][$paymentId];
+            } else {
+                $serviceSettings = $settings['payments']['options'][$paymentId];
+            }
         }
 
-        if (intval($serviceSettings['preventBuyerEmail']) != 1) {
-            $this->sendBuyerMail($orderItem);
-        }
-        if (intval($serviceSettings['preventSellerEmail']) != 1) {
-            $this->sendSellerMail($orderItem);
-        }
+        $this->sendBuyerMail($orderItem);
+        $this->sendSellerMail($orderItem);
     }
 
     /**
-     * Send a Mail to Buyer
-     *
-     * @param Item $orderItem
+     * send an email to buyer
      */
-    protected function sendBuyerMail(
-        Item $orderItem
-    ) {
+    protected function sendBuyerMail(Item $orderItem): void
+    {
         $mailHandler = GeneralUtility::makeInstance(
             MailHandler::class
         );
+        
         $mailHandler->setCart($this->cart);
         $mailHandler->sendBuyerMail($orderItem);
     }
 
     /**
-     * Send a Mail to Seller
-     *
-     * @param Item $orderItem
+     * send an email to seller
      */
-    protected function sendSellerMail(
-        Item $orderItem
-    ) {
+    protected function sendSellerMail(Item $orderItem): void
+    {
         $mailHandler = GeneralUtility::makeInstance(
             MailHandler::class
         );

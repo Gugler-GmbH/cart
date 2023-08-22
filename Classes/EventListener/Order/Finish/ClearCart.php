@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Extcode\Cart\EventListener\Order\Finish;
 
 /*
@@ -9,10 +11,13 @@ namespace Extcode\Cart\EventListener\Order\Finish;
  * LICENSE file that was distributed with this source code.
  */
 
+use Extcode\Cart\Domain\Model\Order\BillingAddress;
+use Extcode\Cart\Domain\Model\Order\ShippingAddress;
 use Extcode\Cart\Event\Order\EventInterface;
 use Extcode\Cart\Service\SessionHandler;
 use Extcode\Cart\Utility\CartUtility;
 use Extcode\Cart\Utility\ParserUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ClearCart
 {
@@ -45,18 +50,14 @@ class ClearCart
     {
         $cart = $event->getCart();
         $settings = $event->getSettings();
-
-        $paymentId = $cart->getPayment()->getId();
-        $paymentSettings = $this->parserUtility->getTypePluginSettings($settings, $cart, 'payments');
-
-        if (intval($paymentSettings['options'][$paymentId]['preventClearCart']) != 1) {
-            $cart = $this->cartUtility->getNewCart($settings);
-        }
-
-        $this->sessionHandler->write($cart, $settings['settings']['cart']['pid']);
-
-        $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_billing_address_' . $settings['settings']['cart']['pid'], null);
-        $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_shipping_address_' . $settings['settings']['cart']['pid'], null);
-        $GLOBALS['TSFE']->fe_user->storeSessionData();
+        $cartPid = $settings['settings']['cart']['pid'];
+        $this->sessionHandler->writeCart(
+            $cartPid,
+            $this->cartUtility->getNewCart($settings)
+        );
+        $this->sessionHandler->writeAddress(
+            'billing_address_' . $cartPid,
+            GeneralUtility::makeInstance(BillingAddress::class)
+        );
     }
 }
