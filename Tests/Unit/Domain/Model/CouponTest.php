@@ -1,6 +1,6 @@
 <?php
 
-namespace Extcode\Cart\Tests\Unit\Domain\Model\Product;
+namespace Extcode\Cart\Tests\Unit\Domain\Model;
 
 /*
  * This file is part of the package extcode/cart.
@@ -59,6 +59,8 @@ class CouponTest extends UnitTestCase
             $this->discount,
             $this->taxClassId
         );
+
+        parent::setUp();
     }
 
     /**
@@ -231,62 +233,111 @@ class CouponTest extends UnitTestCase
     /**
      * @test
      */
-    public function getIsAvailableReturnsTrueIfNumberAvailableGreaterThanNumberUsed(): void
+    public function setNumberUsedSetsNumberUsed(): void
+    {
+        $this->coupon->setNumberUsed(17);
+
+        self::assertSame(
+            17,
+            $this->coupon->getNumberUsed()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function incNumberUsedIncreaseNumberUsedByOne(): void
+    {
+        $this->coupon->setNumberUsed(17);
+        $this->coupon->incNumberUsed();
+
+        self::assertSame(
+            18,
+            $this->coupon->getNumberUsed()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function isHandleAvailabilityEnabledInitiallyReturnsFalse(): void
+    {
+        self::assertFalse(
+            $this->coupon->isHandleAvailabilityEnabled()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function setIsHandleAvailabilityEnabledSetsHandleAvailable(): void
+    {
+        $this->coupon->setIsHandleAvailabilityEnabled(true);
+
+        self::assertTrue(
+            $this->coupon->isHandleAvailabilityEnabled()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function isAvailableReturnsTrueIfNumberAvailableGreaterThanNumberUsed(): void
     {
         $this->coupon->setNumberAvailable(10);
         $this->coupon->setNumberUsed(1);
         self::assertTrue(
-            $this->coupon->getIsAvailable()
+            $this->coupon->isAvailable()
         );
     }
 
     /**
      * @test
      */
-    public function getIsAvailableReturnsTrueIfHandleAvailableIsFalseAndNumberAvailableEqualsToNumberUsed(): void
+    public function isAvailableReturnsTrueIfHandleAvailableIsFalseAndNumberAvailableEqualsToNumberUsed(): void
     {
         $this->coupon->setNumberAvailable(10);
         $this->coupon->setNumberUsed(10);
         self::assertTrue(
-            $this->coupon->getIsAvailable()
+            $this->coupon->isAvailable()
         );
     }
 
     /**
      * @test
      */
-    public function getIsAvailableReturnsFalseIfHandleAvailableIsTrueAndNumberAvailableEqualsToNumberUsed(): void
+    public function isAvailableReturnsFalseIfHandleAvailableIsTrueAndNumberAvailableEqualsToNumberUsed(): void
     {
-        $this->coupon->setHandleAvailable(true);
+        $this->coupon->setIsHandleAvailabilityEnabled(true);
         $this->coupon->setNumberAvailable(10);
         $this->coupon->setNumberUsed(10);
         self::assertFalse(
-            $this->coupon->getIsAvailable()
+            $this->coupon->isAvailable()
         );
     }
 
     /**
      * @test
      */
-    public function getIsAvailableReturnsTrueIfHandleAvailableIsFalseAndNumberAvailableLessThanNumberUsed(): void
+    public function isAvailableReturnsTrueIfHandleAvailableIsFalseAndNumberAvailableLessThanNumberUsed(): void
     {
         $this->coupon->setNumberAvailable(10);
         $this->coupon->setNumberUsed(11);
         self::assertTrue(
-            $this->coupon->getIsAvailable()
+            $this->coupon->isAvailable()
         );
     }
 
     /**
      * @test
      */
-    public function getIsAvailableReturnsFalseIfHandleAvailableIsTrueAndNumberAvailableLessThanNumberUsed(): void
+    public function isAvailableReturnsFalseIfHandleAvailableIsTrueAndNumberAvailableLessThanNumberUsed(): void
     {
-        $this->coupon->setHandleAvailable(true);
+        $this->coupon->setIsHandleAvailabilityEnabled(true);
         $this->coupon->setNumberAvailable(10);
         $this->coupon->setNumberUsed(11);
         self::assertFalse(
-            $this->coupon->getIsAvailable()
+            $this->coupon->isAvailable()
         );
     }
 
@@ -319,10 +370,10 @@ class CouponTest extends UnitTestCase
     /**
      * @test
      */
-    public function getIsCombinableInitiallyReturnsFalse(): void
+    public function isCombinableInitiallyReturnsFalse(): void
     {
         self::assertFalse(
-            $this->coupon->getIsCombinable()
+            $this->coupon->isCombinable()
         );
     }
 
@@ -331,12 +382,10 @@ class CouponTest extends UnitTestCase
      */
     public function setIsCombinableSetsIsCombinable(): void
     {
-        $isCombinable = true;
-
-        $this->coupon->setIsCombinable($isCombinable);
+        $this->coupon->setIsCombinable(true);
 
         self::assertTrue(
-            $this->coupon->getIsCombinable()
+            $this->coupon->isCombinable()
         );
     }
 }

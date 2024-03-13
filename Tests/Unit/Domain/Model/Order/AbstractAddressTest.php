@@ -10,20 +10,18 @@ namespace Extcode\Cart\Tests\Unit\Domain\Model\Order;
  */
 
 use Extcode\Cart\Domain\Model\Order\AbstractAddress;
+use Extcode\Cart\Domain\Model\Order\Item;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-class AddressTest extends UnitTestCase
+class AbstractAddressTest extends UnitTestCase
 {
-    /**
-     * @var AbstractAddress
-     */
-    protected $address;
+    protected AbstractAddress $address;
 
     public function setUp(): void
     {
-        $this->address = $this->getMockForAbstractClass(
-            AbstractAddress::class
-        );
+        $this->address = $this->getMockForAbstractClass(AbstractAddress::class);
+
+        parent::setUp();
     }
 
     /**
@@ -75,12 +73,37 @@ class AddressTest extends UnitTestCase
             'country' => $country,
             'email' => $email,
             'phone' => $phone,
-            'fax' => $fax
+            'fax' => $fax,
         ];
 
         self::assertSame(
             $addressArray,
             $this->address->toArray()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function getItemInitiallyReturnsNull(): void
+    {
+        self::assertNull(
+            $this->address->getItem()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function setItemSetsItem(): void
+    {
+        $item = new Item();
+
+        $this->address->setItem($item);
+
+        self::assertSame(
+            $item,
+            $this->address->getItem()
         );
     }
 
@@ -627,5 +650,118 @@ class AddressTest extends UnitTestCase
             $fax,
             $this->address->getFax()
         );
+    }
+
+    /**
+     * @test
+     */
+    public function getAdditionalInitiallyReturnsEmptyArray()
+    {
+        self::assertIsArray(
+            $this->address->getAdditional()
+        );
+        self::assertEmpty(
+            $this->address->getAdditional()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function setAdditionalSetsAdditional()
+    {
+        $additional = [
+            'additional' => true,
+        ];
+
+        $this->address->setAdditional($additional);
+
+        self::assertSame(
+            $additional,
+            $this->address->getAdditional()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function additionalIsInternallyJsonString()
+    {
+        $additional = [
+            'additional' => true,
+        ];
+
+        $address = $this->getAccessibleMock(
+            AbstractAddress::class,
+            [],
+            [],
+            '',
+            false
+        );
+
+        self::assertSame(
+            '',
+            $address->_get('additional')
+        );
+
+        $address->setAdditional($additional);
+
+        self::assertSame(
+            json_encode($additional),
+            $address->_get('additional')
+        );
+    }
+
+    /**
+     * Creates a mock object which allows for calling protected methods and access of protected properties.
+     *
+     * Note: This method has no native return types on purpose, but only PHPDoc return type annotations.
+     * The reason is that the combination of "union types with generics in PHPDoc" and "a subset of those types as
+     * native types, but without the generics" tends to confuse PhpStorm's static type analysis (which we want to avoid).
+     *
+     * @template T of object
+     * @param class-string<T> $originalClassName name of class to create the mock object of
+     * @param string[]|null $methods name of the methods to mock, null for "mock no methods"
+     * @param array $arguments arguments to pass to constructor
+     * @param string $mockClassName the class name to use for the mock class
+     * @param bool $callOriginalConstructor whether to call the constructor
+     * @param bool $callOriginalClone whether to call the __clone method
+     * @param bool $callAutoload whether to call any autoload function
+     *
+     * @return MockObject&AccessibleObjectInterface&T a mock of `$originalClassName` with access methods added
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function getAccessibleMock(
+        string $originalClassName,
+        array|null $methods = [],
+        array $arguments = [],
+        string $mockClassName = '',
+        bool $callOriginalConstructor = true,
+        bool $callOriginalClone = true,
+        bool $callAutoload = true
+    ) {
+        if ($originalClassName === '') {
+            throw new \InvalidArgumentException('$originalClassName must not be empty.', 1334701880);
+        }
+
+        $mockBuilder = $this->getMockBuilder($this->buildAccessibleProxy($originalClassName))
+            ->addMethods($methods)
+            ->setConstructorArgs($arguments)
+            ->setMockClassName($mockClassName);
+
+        if (!$callOriginalConstructor) {
+            $mockBuilder->disableOriginalConstructor();
+        }
+
+        if (!$callOriginalClone) {
+            $mockBuilder->disableOriginalClone();
+        }
+
+        if (!$callAutoload) {
+            $mockBuilder->disableAutoload();
+        }
+
+        return $mockBuilder->getMock();
     }
 }
